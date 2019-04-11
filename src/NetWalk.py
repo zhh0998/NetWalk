@@ -67,7 +67,13 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
     embModel = MD.Model(activation, dimension, walk_len, n, gama, lamb, beta, rho,epoch, batch_size, learning_rate, optimizer, corrupt_prob)
 
-    init_edges, snapshots = netwalk.data
+    init_edges, snapshots,edges = netwalk.data
+    edges=edges-1
+    G = nx.Graph()
+    G.add_edges_from(edges)
+    vertices = np.unique(edges)
+    edge_list=tuple(map(tuple, edges))
+    #edge_list=edge_list-1
 
     data = netwalk.getInitWalk()
 
@@ -78,17 +84,19 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     print("Code Here \n")
 
     # load karate club graph
-    G = nx.karate_club_graph()
-    edge_list = G.edges()
+    # G = nx.karate_club_graph()
+    # edge_list = G.edges()
 
     # list of initial edge list tuples
-    tuples = tuple(map(tuple, init_edges - 1))
+    #tuples = list(map(list, init_edges - 1))
+    tuples = tuple(map(tuple, init_edges-1))
 
     # complementary set of edges for initial edges
     rm_list = [x for x in edge_list if x not in tuples]
 
+
     # visualize initial embedding
-    viz_stream(rm_list, fig, 5, 2, 1)
+    viz_stream(G,rm_list, fig, 5, 2, 1)
 
     # STEP 3: over different snapshots of edges, dynamically updating embeddings of nodes and conduct
     #         online anomaly detection for edges, visualize the anomaly score of each snapshot
@@ -99,10 +107,10 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         snapshotNum += 1
         embedding_code(embModel, data, n,output)
         rm_list = [x for x in edge_list if x not in tuples]
-        viz_stream(rm_list, fig, 5, 2, snapshotNum+1)
+        viz_stream(G,rm_list, fig, 5, 2, snapshotNum+1)
 
     plt.show()
-    fig.savefig('../plots/graph.png')
+    fig.savefig('../plots/graph'+str(datetime.datetime.now())+'.png')
 
     print("finished")
 
@@ -143,7 +151,7 @@ def main():
     format='adjlist'
 
     #parser.add_argument('--snap', default=10,help='number of edges in each snapshot')
-    snap=10
+    snap=120
 
     #parser.add_argument('--init_percent', default=0.5,help='percentage of edges in initial graph')
     init_percent=0.5
@@ -153,8 +161,10 @@ def main():
     input = '../data/cit-DBLP.edges'
     #input = '../data/edges.csv'
     #input = '../data/opsahl-ucsocial.n3'
-    #input = '../data/cit-HepTh.txt'
+    #input = '../data/ca-HepPh.mtx'
     #input = '../data/p2p-Gnutella08.edgelist'
+    #input='../data/ca-citeseer.mtx'
+    #input='../data/ca-netscience.mtx'
 
     #parser.add_argument("-l", "--log", dest="log", default="INFO",help="log verbosity level")
 

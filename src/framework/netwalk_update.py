@@ -272,7 +272,7 @@ class NetWalk_update:
             self.data = self.__get_data_mat(test, train)
 
 
-        init_edges, snapshots = self.data
+        init_edges, snapshots,_ = self.data
         self.walk_update = WalkUpdate(init_edges, self.vertices, walk_len=self.walk_len, walk_per_node=self.walk_per_node, prev_percent=1, seed=24)
 
     def __get_data_mat(self, test, train):
@@ -322,7 +322,7 @@ class NetWalk_update:
             snapshots.append(edges[current:current + self.snap])
             current += self.snap
         print("number of snapshots: %d, edges in each snapshot: %d" % (len(snapshots), self.snap))
-        data = (init_edges, snapshots)
+        data = (init_edges, snapshots,edges)
         return data
 
     def run(self):
@@ -330,7 +330,7 @@ class NetWalk_update:
         perform netwalk program with input data
         :return:
         """
-        init_edges, snapshots = self.data
+        init_edges, snapshots,_ = self.data
         walk_update = WalkUpdate(init_edges, self.vertices, self.walk_per_node)
         # call netwalk core
         # save embedding
@@ -348,7 +348,7 @@ class NetWalk_update:
         get number of total time snapshots
         :return: The number of total time snapshots
         """
-        init_edges, snapshots = self.data
+        init_edges, snapshots,_ = self.data
         return len(snapshots)
 
     def nextOnehotWalks(self):
@@ -358,7 +358,7 @@ class NetWalk_update:
         """
         if not self.hasNext():
             return False
-        _, snapshots = self.data
+        _, snapshots,_ = self.data
         snapshot = snapshots[self.idx]
         self.idx += 1
         training_set = self.walk_update.update(snapshot)
@@ -370,7 +370,7 @@ class NetWalk_update:
         Checking if still has next snapshot
         :return: true if has, or return false
         """
-        init_edges, snapshots = self.data
+        init_edges, snapshots,_ = self.data
         if self.idx >= len(snapshots):
             return False
         else:
@@ -392,8 +392,8 @@ class NetWalk_update:
         :param walks: walk list
         :return: one-hot walk list
         """
-        #walk_mat = np.array(walks, dtype=int) - 1
-        walk_mat = np.array(walks, dtype=int)
+        walk_mat = np.array(walks, dtype=int) - 1
+        #walk_mat = np.array(walks, dtype=int)
         rows = walk_mat.flatten()
         cols = np.array(range(len(rows)))
         data = np.array([1] * (len(rows)))

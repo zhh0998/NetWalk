@@ -19,7 +19,7 @@ pylab.rcParams.update(params)
 
 
 
-def viz_stream(rm_edges, fig, row, col, id, membership_path="./tmp/membership.txt", embedding_path="./tmp/embedding.txt"):
+def viz_stream(G,rm_edges, fig, row, col, id, membership_path="./tmp/membership.txt", embedding_path="./tmp/embedding.txt"):
     """
     Visualizing karate graph for dynamical graph embedding demo
     :param rm_edges: removed edges
@@ -31,7 +31,7 @@ def viz_stream(rm_edges, fig, row, col, id, membership_path="./tmp/membership.tx
     :param embedding_path: node embedding results
     :return: no return
     """
-    G = nx.karate_club_graph()
+    #G = nx.karate_club_graph()
 
     membership = {}
     with open(membership_path, 'r') as member:
@@ -54,9 +54,9 @@ def viz_stream(rm_edges, fig, row, col, id, membership_path="./tmp/membership.tx
 
     count = 0
     for com in set(membership.values()):
-        count += 1
         list_nodes = [nodes for nodes in membership.keys() if membership[nodes] == com]
-        nx.draw_networkx_nodes(G, pos, list_nodes, node_size=150, linewidths=0, node_color=colors[count])
+        nx.draw_networkx_nodes(G, pos, list_nodes, node_size=len(list_nodes), linewidths=0, node_color=colors[count])
+        count += 1
     nx.draw_networkx_labels(G, pos, font_size=9, font_color='k')#, font=font)
     nx.draw_networkx_edges(G, pos, alpha=0.5)
 
@@ -74,9 +74,9 @@ def viz_stream(rm_edges, fig, row, col, id, membership_path="./tmp/membership.tx
             embedding[int(res[0])] = [float(res[1]), float(res[2])]
     count = 0
     for com in set(membership.values()):
-        count += 1
         list_nodes = [nodes for nodes in membership.keys() if membership[nodes] == com]
         nx.draw_networkx_nodes(G, embedding, list_nodes, node_size=150, linewidths=0., node_color=colors[count])
+        count += 1
     nx.draw_networkx_labels(G, embedding, font_size=9, font_color='k')#, font=font)
 
 
