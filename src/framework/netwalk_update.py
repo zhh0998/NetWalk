@@ -408,6 +408,7 @@ class NetWalk_update:
         #coo = coo_matrix((data, (rows, cols)))
         #slicedCoo=coo[m,:]
         onehot_walks = csr_matrix(coo)
+        #onehotwalks_array=np.asarray(onehot_walks)
         onehotwalks_array=onehot_walks.toarray()
         return onehotwalks_array
 

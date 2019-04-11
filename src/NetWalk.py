@@ -70,14 +70,12 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     init_edges, snapshots = netwalk.data
 
     data = netwalk.getInitWalk()
-    print("Code Here \n")
 
     fig = plt.figure(figsize=(12, 12))
 
-
-
     # STEP 2: Learning initial embeddings for training edges
     embedding_code(embModel, data, n, output)
+    print("Code Here \n")
 
     # load karate club graph
     G = nx.karate_club_graph()
