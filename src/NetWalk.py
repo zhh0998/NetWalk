@@ -150,11 +150,11 @@ def main():
 
     #parser.add_argument('--input', nargs='?', default='../data/karate.edges',help='Input graph file')        # required=True,
     #input='../data/karate.edges'
-    #input = '../data/com-dblp.ungraph.txt'
+    input = '../data/cit-DBLP.edges'
     #input = '../data/edges.csv'
     #input = '../data/opsahl-ucsocial.n3'
     #input = '../data/cit-HepTh.txt'
-    input = '../data/p2p-Gnutella08.edgelist'
+    #input = '../data/p2p-Gnutella08.edgelist'
 
     #parser.add_argument("-l", "--log", dest="log", default="INFO",help="log verbosity level")
 
