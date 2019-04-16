@@ -56,7 +56,8 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     optimizer = "adam"                  #"rmsprop"#"gd"#"rmsprop" #"""gd"#""lbfgs"
     corrupt_prob = [0]                  # corrupt probability, for denoising AE
     ini_graph_percent = init_percent    # percent of edges in the initial graph
-    anomaly_percent = 0.1                # percentage of anomaly edges in the testing edges
+    #anomaly_percent = 1 #0.1 for bigger               # percentage of anomaly edges in the testing edges
+    anomaly_percent = 0.1
     alfa = 0.01 #0.5(paper)                        # updating parameter for online k-means to update clustering centroids
     if(datasetname=="karate"):
         k=4
@@ -74,8 +75,10 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
     # region STEP 1: Generates Anomaly data: training data and testing list of edges(for online updating)
     membership_path="./tmp/membership_"+datasetname+".txt"
-    synthetic_test, train_mat, train = anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path)
+    synthetic_test, train_mat, train,anomalies = anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path)
     data_zip = []
+    # data_zip.append(synthetic_test)
+    # data_zip.append(train)
     data_zip.append(synthetic_test)
     data_zip.append(train)
     # endregion
@@ -101,7 +104,13 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     # region conduct anomaly detection using first snapshot of testing edges
     accuracy=[]
     networkLen=[]
-    test_piece=synthetic_test[0:snap, :]
+    test_piece=[]
+    trainvertices=np.unique(train)
+    for edge in anomalies:
+        if (edge[0] in trainvertices and edge[1] in trainvertices) :
+            test_piece.append(edge)
+    #test_piece=anomalies
+    test_piece=np.array(test_piece)
     scores, auc, n0, c0, res, ab_score = anomaly_detection(embedding, train, test_piece, k)
     accuracy.append(auc)
     networkLen.append(len(train))
@@ -123,18 +132,25 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         snapshot_data = netwalk.nextOnehotWalks()
         embedding = getEmbedding(embModel, snapshot_data, n)
         # endregion
-        for item in test_piece:
-            if(item[2]==0):
-                train = np.vstack((train, item[:2]))
-        if netwalk.hasNext():
-            if len(synthetic_test) > snap*(snapshotNum+1):
-                #test_piece = synthetic_test[snap*snapshotNum:snap*(snapshotNum+1), :]
-                test_piece = synthetic_test[:snap * (snapshotNum + 1), :]
-            else:
-                #test_piece = synthetic_test[snap * snapshotNum:, :]
-                test_piece = synthetic_test
+        # for item in test_piece:
+        #     if(item[2]==0):
+        #         train = np.vstack((train, item[:2]))
+        # if netwalk.hasNext():
+        #     if len(synthetic_test) > snap*(snapshotNum+1):
+        #         #test_piece = synthetic_test[snap*snapshotNum:snap*(snapshotNum+1), :]
+        #         test_piece = synthetic_test[:snap * (snapshotNum + 1), :]
+        #     else:
+        #         #test_piece = synthetic_test[snap * snapshotNum:, :]
+        #         test_piece = synthetic_test
 
-        #train=np.concatenate((train,synthetic_test[snap*(snapshotNum-1):snap*(snapshotNum),:2]),axis=0)
+        train=np.concatenate((train,synthetic_test[snap*(snapshotNum-1):snap*(snapshotNum),:2]),axis=0)
+        test_piece = []
+        #rows = train.flatten()
+        trainvertices1 = np.unique(train)
+        for edge in anomalies:
+            if (edge[0] in trainvertices and edge[1] in trainvertices1):
+                test_piece.append(edge)
+        test_piece = np.array(test_piece)
         # else:
         #     return
 
@@ -150,6 +166,8 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
         # visualizing anomaly score of current snapshot
         #d_plot.addPoint(snapshotNum, ab_score)
+    cores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
+    print('Final Accuracy: %f' % (auc))
     plt.plot(networkLen,accuracy)
     plt.savefig('../plots/anomalyaccuracy_' + datasetname + '.png')
     # endregion
@@ -185,17 +203,17 @@ def main():
     # input = '../data/dolphins.mtx'
     datasetname = 'cora'
     input = '../data/cora.edgelist'
-    # datasetname = 'citeseer'
-    # input = '../data/citeseer.edgelist'
+    #datasetname = 'citeseer'
+    #input = '../data/citeseer.edgelist'
     # datasetname = 'toy'
     # input = '../data/toy.edges'
     number_walks = 20
     output = './tmp/embedding_' + datasetname + '.txt'
     if (datasetname == "karate"):
         snap = 10
-        representation_size = 16
+        representation_size = 32
     elif (datasetname == "toy"):
-        snap = 3
+        snap = 2
         representation_size = 8
     elif (datasetname == "dolphin"):
         snap = 10

@@ -114,7 +114,8 @@ def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership
     # sparse(train(:,1), train(:,2), ones(length(train), 1), n, n) #TODO: node addition
     train_mat = train_mat + train_mat.transpose()
 
-    return synthetic_test, train_mat, train
+    #return synthetic_test, train_mat, train
+    return test, train_mat, train,anomalies
 
 
 
@@ -142,8 +143,15 @@ def processEdges(fake_edges, data):
     for i in a:
         if i not in b:
             c.append(i)
-    fake_edges = np.array(c)
-    return fake_edges
+    #fake_edges = np.array(c)
+    fake_edges = c
+    uniqueEdge=[]
+    for edge in fake_edges:
+        if edge in uniqueEdge:
+            continue
+        else:
+            uniqueEdge.append(edge)
+    return np.array(uniqueEdge)
 
 def edgeList2Adj(data):
     """
