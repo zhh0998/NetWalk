@@ -65,7 +65,10 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     elif(datasetname=="cora"):
         k=7
     elif(datasetname=="citeseer"):
-        k = 6                             # number of clusters for kmeans to clustering edges
+        k = 6
+    elif (datasetname == "dolphin"):
+        k = 3                                                  # number of clusters for kmeans to clustering edges
+
     print("No of Clusters in Dataset "+str(datasetname)+" is "+str(k))
     # endregion
 
@@ -178,21 +181,25 @@ def main():
     init_percent = 0.5
     # datasetname = 'karate'
     # input = '../data/karate.edges'
-    #datasetname = 'dolphin'
-    #input = '../data/dolphins.mtx'
-    # datasetname = 'cora'
-    # input = '../data/cora.edgelist'
+    # datasetname = 'dolphin'
+    # input = '../data/dolphins.mtx'
+    datasetname = 'cora'
+    input = '../data/cora.edgelist'
     # datasetname = 'citeseer'
     # input = '../data/citeseer.edgelist'
-    datasetname = 'toy'
-    input = '../data/toy.edges'
+    # datasetname = 'toy'
+    # input = '../data/toy.edges'
     number_walks = 20
     output = './tmp/embedding_' + datasetname + '.txt'
-    representation_size = 16
     if (datasetname == "karate"):
         snap = 10
+        representation_size = 16
     elif (datasetname == "toy"):
         snap = 3
+        representation_size = 8
+    elif (datasetname == "dolphin"):
+        snap = 10
+        representation_size = 32
     seed = 24
     walk_length = 3
     # endregion
