@@ -29,7 +29,6 @@ def anomaly_detection(embedding, train, synthetic_test, k):
     #   ab_score: anomaly score for the whole snapshot, just the sum of distances to their nearest centroids
     """
 
-    print('[#s] edge encoding...\n', datetime.datetime.now())
 
     src = embedding[train[:, 0] - 1, :]
     dst = embedding[train[:, 1] - 1, :]
@@ -52,8 +51,6 @@ def anomaly_detection(embedding, train, synthetic_test, k):
         codes = (src - dst) ** 2
         test_codes = (test_src - test_dst) ** 2
 
-    print('[#s] anomaly detection...\n', datetime.datetime.now())
-
     # conducting k-means clustering and recording centroids of different
     # clusters
 
@@ -64,32 +61,17 @@ def anomaly_detection(embedding, train, synthetic_test, k):
     indices = kmeans.predict(codes)
     # Centroid values
     centroids = kmeans.cluster_centers_
-
-    # [indices, centroids] = kmeans(codes, k)
-
-    # tbl = tabulate(indices)
-    # c = dict.fromkeys(indices, 0)
-    #
-    # for x in indices:
-    #     c[x] += 1
-
     tbl = Counter(indices)
-
     n = list(tbl.values())
-
     c = centroids
-
     assert (len(n) == k)
 
 
     labels = synthetic_test[:, 2]
-
     # calculating distances for testing edge codes to centroids of clusters
     dist_center = cdist(test_codes, c)
-
     # assinging each testing edge code to nearest centroid
     min_dist = np.min(dist_center, 1)
-
     # sorting distances of testing edges to their nearst centroids
     scores = min_dist.argsort()
     scores = scores[::-1]
@@ -108,7 +90,6 @@ def anomaly_detection(embedding, train, synthetic_test, k):
     min_dist_tr = np.min(dist_center_tr, 1)
     max_dist_tr = np.max(min_dist_tr)
     res = [1 if x > max_dist_tr else 0 for x in min_dist]
-    #ab_score = np.sum(res)/(1e-10 + len(res))
     ab_score = np.sum(min_dist) / (1e-10 + len(min_dist))
 
     return scores, auc, n, c, res, ab_score
@@ -119,5 +100,5 @@ if __name__ == "__main__":
     train = np.array([[1, 2], [3, 4],[1,5]])
     synthetic_test = np.array([[2, 5, 0], [1, 3, 1], [2, 4, 1]])
     k = 2
-    scores, auc, n, c = anomaly_detection(embedding, train, synthetic_test, k)
+    scores, auc, n, c,res, ab_score = anomaly_detection(embedding, train, synthetic_test, k)
     print(auc)

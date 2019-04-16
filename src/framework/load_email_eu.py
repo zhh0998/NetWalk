@@ -26,23 +26,25 @@ def load_email_eu(data_path, sample_rate):
     #   Copyright 2018 NEC Labs America, Inc.
     #   $Revision: 1.0 $  $Date: 2018/10/26 17:46:36 $
     """
-    edges = np.loadtxt(data_path, dtype=int, comments='%') + 1
 
-    # change to undirected graph
+    #Load Edges from EdgeList
+    edges = np.loadtxt(data_path, dtype=int, comments='%') + 1
+    # region change to undirected graph
     idx_reverse = np.nonzero(edges[:, 0] - edges[:, 1] > 0)
     tmp = edges[idx_reverse]
     tmp[:, [0, 1]] = tmp[:, [1, 0]]
     edges[idx_reverse] = tmp
+    # endregion
 
-    # remove self-loops
+    # region remove self-loops
     idx_remove_dups = np.nonzero(edges[:, 0] - edges[:, 1] < 0)
     edges = edges[idx_remove_dups]
-
     edges = edges[:, 0:2]
+    # endregion
 
-
-    # only keep unique edges
+    # region only keep unique edges
     edges, ind_ = np.unique(edges, axis=0, return_index=True)
+    # endregion
 
 
     step = int(np.floor(1/sample_rate))

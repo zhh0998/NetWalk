@@ -12,7 +12,7 @@ from scipy.sparse import csr_matrix
 from sklearn.cluster import SpectralClustering
 
 
-def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m):
+def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path=""):
     """ generate anomaly
     split the whole graph into training network which includes parts of the
     whole graph edges(with ini_graph_percent) and testing edges that includes
@@ -38,63 +38,79 @@ def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m):
                         (nodeID, nodeID)
     """
     np.random.seed(1)
-    print('[#s] generating anomalous dataset...\n', datetime.datetime.now())
-    print('[#s] initial network edge percent: #.1f##, anomaly percent: #.1f##.\n', datetime.datetime.now(),
-          ini_graph_percent * 100, anomaly_percent * 100)
-
-    # ini_graph_percent = 0.5;
-    # anomaly_percent = 0.05;
+    print('Generating anomalous dataset...\n')
+    print('Initial network edge percent: '+str(ini_graph_percent * 100))
+    print('\n')
+    print('Initial anomaly percent : '+str(anomaly_percent * 100))
+    print('\n')
     train_num = int(np.floor(ini_graph_percent * m))
 
-    # select part of edges as in the training set
+    # region train and test edges
+    # select top train_num edges(0:train_num) as in the training set
     train = data[0:train_num, :]
 
     # select the other edges as the testing set
     test = data[train_num:, :]
+    # endregion
 
-    #data to adjacency_matrix
-    adjacency_matrix = edgeList2Adj(data)
+    # region Spectral Clustering Part(Commented)
+    # Make Adjacency Matrix of whole Data
+    # data to adjacency_matrix(edgelist to Adj)
+    #adjacency_matrix = edgeList2Adj(data)
 
     # clustering nodes to clusters using spectral clustering
-    kk = 3#10#42#42
-    sc = SpectralClustering(kk, affinity='precomputed', n_init=100, assign_labels = 'discretize')
-    labels = sc.fit_predict(adjacency_matrix)
+    # kk = 4
+    # sc = SpectralClustering(kk, affinity='precomputed', n_init=100, assign_labels = 'discretize')
+    # labels = sc.fit_predict(adjacency_matrix)
+    # endregion
 
+    # region Read Cluster labeling from membership.txt file
+    labels=[]
+    with open(membership_path, 'r') as member:
+        for idx,line in enumerate(member):
+            labels.append(int(line))
+    # endregion
 
-    # generate fake edges that are not exist in the whole graph, treat them as
-    # anamalies
+    # region Fake Edge Generation
+    # generate fake edges that are not exist in the whole graph, treat them as anamalies
     idx_1 = np.expand_dims(np.transpose(np.random.choice(n, m)) + 1, axis=1)
     idx_2 = np.expand_dims(np.transpose(np.random.choice(n, m)) + 1, axis=1)
     generate_edges = np.concatenate((idx_1, idx_2), axis=1)
 
-    ####### genertate abnormal edges ####
+    # genertate abnormal edges
     fake_edges = np.array([x for x in generate_edges if labels[x[0] - 1] != labels[x[1] - 1]])
 
+    #remove self-loops and duplicates and order fake edges
     fake_edges = processEdges(fake_edges, data)
+    # endregion
 
-
-    anomaly_num = 12#int(np.floor(anomaly_percent * np.size(test, 0)))
+    # region Take anomaly_num edges from fake_edges as anomaly
+    anomaly_num = int(np.floor(anomaly_percent * np.size(test, 0)))
     anomalies = fake_edges[0:anomaly_num, :]
+    # endregion
 
+    # region Put anomaly edges in test_edges in random positions
     idx_test = np.zeros([np.size(test, 0) + anomaly_num, 1], dtype=np.int32)
     # randsample: sample without replacement
     # it's different from datasample!
 
-    #anomaly_pos = np.random.choice(np.size(idx_test, 0), anomaly_num, replace=False)
+    anomaly_pos = np.random.choice(np.size(idx_test, 0), anomaly_num, replace=False)
 
-    anomaly_pos = np.random.choice(100, anomaly_num, replace=False)+200
+    #anomaly_pos = np.random.choice(100, anomaly_num, replace=False)+200
 
     idx_test[anomaly_pos] = 1
     synthetic_test = np.concatenate((np.zeros([np.size(idx_test, 0), 2], dtype=np.int32), idx_test), axis=1)
+    # endregion
 
+    # region Prepare Synthetic test Edges
     idx_anomalies = np.nonzero(idx_test.squeeze() == 1)
     idx_normal = np.nonzero(idx_test.squeeze() == 0)
 
     synthetic_test[idx_anomalies, 0:2] = anomalies
     synthetic_test[idx_normal, 0:2] = test
+    # endregion
 
-    train_mat = csr_matrix((np.ones([np.size(train, 0)], dtype=np.int32), (train[:, 0] - 1, train[:, 1] - 1)),
-                           shape=(n, n))
+    train_mat = csr_matrix((np.ones([np.size(train, 0)], dtype=np.int32), (train[:, 0] - 1, train[:, 1] - 1)),shape=(n, n))
     # sparse(train(:,1), train(:,2), ones(length(train), 1), n, n) #TODO: node addition
     train_mat = train_mat + train_mat.transpose()
 

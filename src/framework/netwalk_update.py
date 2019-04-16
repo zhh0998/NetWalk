@@ -19,7 +19,7 @@ class Reservior:
     class maintains a sketch of the dynamic graph
     """
 
-    def __init__(self, edges, vertices, dim=10, seed=42):
+    def __init__(self, edges, vertices, dim, seed=42):
         self.reservior = {}
         self.degree = {}
         self.init_edges = edges
@@ -35,18 +35,23 @@ class Reservior:
         """
         # TODO: check matlab code
         # TODO: currently implementation is for undirected graph
+        # region Prepare Graph with init_edges
         g = nx.Graph()
         g.add_edges_from(self.init_edges)
+        # endregion
+
+        # region Prepare Reservior for the vertices in the Graph with init_edges
         for v in self.vertices:
             if v in g:
                 nbrs = list(g.neighbors(v))
                 np.random.seed(self.seed)
-                indices = np.random.randint(len(nbrs), size=self.reservior_dim)
-                self.reservior[v] = np.array([nbrs[idx] for idx in indices])
+                indices = np.random.randint(len(nbrs), size=self.reservior_dim)  #Randomly put indices into reservior vector of size dim
+                self.reservior[v] = np.array([nbrs[idx] for idx in indices])  #put neighbour node corresponding to indices in reservior vector
                 self.degree[v] = len(nbrs)
             else:
                 self.reservior[v] = np.array([None] * self.reservior_dim)
                 self.degree[v] = 0
+        # endregion
 
     def update(self, edges):
         """
@@ -59,7 +64,7 @@ class Reservior:
             u, v = edge
 
             # update u's reservior, edges can not be duplicated in the training and updating
-            assert v not in self.reservior[u]
+            #assert v not in self.reservior[u]
 
             self.degree[u] += 1
             indices = np.random.randint(self.degree[u], size=self.reservior_dim)
@@ -67,7 +72,7 @@ class Reservior:
             self.reservior[u][replace_idx] = v
 
             # update v's reservior, edges can not be duplicated in the training and updating
-            assert u not in self.reservior[v]
+            #assert u not in self.reservior[v]
 
             self.degree[v] += 1
             indices = np.random.randint(self.degree[v], size=self.reservior_dim)
@@ -79,14 +84,13 @@ class WalkUpdate:
     """WalkUpdate update the Reservior and generate new batch of walks.
 
         """
-    def __init__(self, init_edges, vertices, walk_len, walk_per_node, prev_percent, seed):
+    def __init__(self, init_edges, vertices, walk_len, walk_per_node, prev_percent, seed,snap):
         self.init_edges = init_edges
         self.walk_len = walk_len
         self.walk_per_node = walk_per_node
         self.prev_percent = prev_percent
         self.seed = seed
-
-        self.reservior = Reservior(edges=self.init_edges, vertices=vertices)
+        self.reservior = Reservior(edges=self.init_edges, vertices=vertices,dim=snap)
 
         # previous walks
         self.prev_walks = self.__init_walks()
@@ -101,8 +105,10 @@ class WalkUpdate:
         Initial walks generated from random walking
         :return:
         """
+        # region Prepare graph g with initial edges
         g = nx.Graph()
         g.add_edges_from(self.init_edges)
+        # endregion
         rand = random.Random(self.seed)
         walks = []
         nodes = list(g.nodes())
@@ -162,6 +168,7 @@ class WalkUpdate:
             old_samples = [w for w in self.prev_walks if w[0] not in start_node]
             self.training_walks = self.new_walks + old_samples
             print("length of training walks: %d" % len(self.training_walks))
+            print("\n")
             self.prev_walks = walk_set + old_samples
 
             return
@@ -263,17 +270,14 @@ class NetWalk_update:
         self.vertices = None
         self.idx = 0
         self.walk_per_node = walk_per_node
-
         if isinstance(path, str):
-            self.data = self.__get_data()
+            self.data = self.__get_data()   #call _get_data() method of this class
         else:
             test = path[0][:, 0:2]
             train = path[1]
             self.data = self.__get_data_mat(test, train)
-
-
         init_edges, snapshots,_ = self.data
-        self.walk_update = WalkUpdate(init_edges, self.vertices, walk_len=self.walk_len, walk_per_node=self.walk_per_node, prev_percent=1, seed=24)
+        self.walk_update = WalkUpdate(init_edges, self.vertices, walk_len=self.walk_len, walk_per_node=self.walk_per_node, prev_percent=1, seed=24,snap=snap)
 
     def __get_data_mat(self, test, train):
         """
@@ -284,11 +288,8 @@ class NetWalk_update:
         """
         edges = np.concatenate((train, test), axis=0)
         self.vertices = np.unique(edges)
-        #self.vertices = np.unique(nodes)
         init_edges = train
-        print("total edges: %d, initial edges: %d; total vertices: %d"
-              % (len(edges), len(init_edges), len(self.vertices)))
-
+        print("total edges: %d, initial edges: %d; total vertices: %d"% (len(edges), len(init_edges), len(self.vertices)))
         snapshots = []
         current = 0
         while current < len(test):
@@ -297,7 +298,7 @@ class NetWalk_update:
             snapshots.append(test[current:current + self.snap])
             current += self.snap
         print("number of snapshots: %d, edges in each snapshot: %d" % (len(snapshots), self.snap))
-        data = (init_edges, snapshots)
+        data = (init_edges, snapshots,edges)
         return data
 
     def __get_data(self):
@@ -398,7 +399,6 @@ class NetWalk_update:
         cols = np.array(range(len(rows)))
         data = np.array([1] * (len(rows)))
         maxrows=max(rows)
-        print(maxrows)
         if(maxrows<=len(self.vertices)):
             m=len(self.vertices)
         else:

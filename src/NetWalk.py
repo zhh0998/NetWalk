@@ -33,10 +33,9 @@ def print_time():
     return datetime.now().strftime('[INFO %Y-%m-%d %H:%M:%S]')
 
 
-def static_process(representation_size,walk_length,input,number_walks,init_percent,snap,output):
+def static_process(representation_size,walk_length,input,number_walks,init_percent,snap,output,datasetname):
 
-
-    # STEP 0: Parameters
+    # region Parameters
     hidden_size = representation_size     # size of hidden codes to learn, default is 20
     activation = tf.nn.sigmoid
     rho = 0.5           # sparsity ratio
@@ -49,12 +48,16 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     learning_rate = 0.1 # learning rate, for adam, using 0.01, for rmsprop using 0.1
     optimizer = "rmsprop"#"gd"#"rmsprop" #""lbfgs"#"rmsprop"#"adam"#"gd"#""lbfgs"#"adam"#
     corrupt_prob = [0]  # corrupt probability, for denoising AE
+    # endregion
 
-
-    # STEP 1: Preparing data: training data and testing list of edges(for online updating)
+    # region STEP 1: Preparing data: training data and testing list of edges(for online updating)
     data_path = input
     netwalk = NetWalk_update(data_path, walk_per_node=number_walks,walk_len=walk_length, init_percent=init_percent, snap=snap)
     n = len(netwalk.vertices) # number of total nodes
+    # endregion
+
+
+
     print("{} Number of nodes: {}".format(print_time(), n))
     print("{} Number of walks: {}".format(print_time(), number_walks))
     print("{} Data size (walks*length): {}".format(print_time(),number_walks*walk_length))
@@ -62,55 +65,67 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     print("{} Clique embedding training...".format(print_time()))
 
 
-
     dimension = [n, hidden_size]
 
     embModel = MD.Model(activation, dimension, walk_len, n, gama, lamb, beta, rho,epoch, batch_size, learning_rate, optimizer, corrupt_prob)
 
     init_edges, snapshots,edges = netwalk.data
-    edges=edges-1
+    edges = edges-1   #karate
+    # G = nx.Graph()
+    # G.add_edges_from(edges)
+    # vertices = np.unique(edges)
     G = nx.Graph()
     G.add_edges_from(edges)
-    vertices = np.unique(edges)
-    edge_list=tuple(map(tuple, edges))
-    #edge_list=edge_list-1
+    clusteringAccuracy=[]
+
+    edge_list = tuple(map(tuple, edges))
 
     data = netwalk.getInitWalk()
 
     fig = plt.figure(figsize=(12, 12))
 
     # STEP 2: Learning initial embeddings for training edges
-    embedding_code(embModel, data, n, output)
-    print("Code Here \n")
+    embeddings=embedding_code(embModel, data, n, output)
 
-    # load karate club graph
-    # G = nx.karate_club_graph()
-    # edge_list = G.edges()
 
     # list of initial edge list tuples
-    #tuples = list(map(list, init_edges - 1))
-    tuples = tuple(map(tuple, init_edges-1))
+    tuples = tuple(map(tuple, init_edges-1))#karate
+    #tuples = tuple(map(tuple, init_edges))
 
     # complementary set of edges for initial edges
     rm_list = [x for x in edge_list if x not in tuples]
 
-
     # visualize initial embedding
-    viz_stream(G,rm_list, fig, 5, 2, 1)
+
+    clusteringAccuracy=viz_stream(G,rm_list, fig, 5, 2, 1,output,"./tmp/membership_"+datasetname+".txt",representation_size,clusteringAccuracy)
 
     # STEP 3: over different snapshots of edges, dynamically updating embeddings of nodes and conduct
     #         online anomaly detection for edges, visualize the anomaly score of each snapshot
     snapshotNum = 0
     while(netwalk.hasNext()):
+        G = nx.Graph()
+        G.add_edges_from(edges)
         data = netwalk.nextOnehotWalks()
         tuples = tuple(map(tuple, snapshots[snapshotNum] - 1)) + tuples
         snapshotNum += 1
         embedding_code(embModel, data, n,output)
         rm_list = [x for x in edge_list if x not in tuples]
-        viz_stream(G,rm_list, fig, 5, 2, snapshotNum+1)
+        clusteringAccuracy=viz_stream(G,rm_list, fig, 5, 2, snapshotNum+1,output,"./tmp/membership_"+datasetname+".txt",representation_size)
+        print(clusteringAccuracy)
 
-    plt.show()
-    fig.savefig('../plots/graph'+str(datetime.datetime.now())+'.png')
+
+    #plt.show()
+
+    fig.savefig('../plots/graph_'+datasetname+'.png')
+    f = open('./tmp/accuracy_' + datasetname + '.txt', 'a+')
+    f.write("dimension is "+str(dimension))
+    f.write("\n")
+    for acc in clusteringAccuracy:
+        f.write(str(acc))
+        f.write("\n")
+    f.write("\n")
+    f.write("\n")
+    #np.savetxt(f, clusteringAccuracy, fmt="%g")
 
     print("finished")
 
@@ -131,67 +146,35 @@ def embedding_code(model, data, n,output):
     # STEP 3: retrieve the embeddings
     node_onehot = np.eye(n)
     res = model.feedforward_autoencoder(node_onehot)
-
     ids = np.transpose(np.array(range(n)))
-
     ids = np.expand_dims(ids, axis=1)
-
     embeddings = np.concatenate((ids, res), axis=1)
 
     # STEP 4: save results
     np.savetxt(output, embeddings, fmt="%g")
     print("{} Done! Embeddings are saved in \"{}\"".format(print_time(),output))
-    # print embeddings
+    return embeddings
 
 
 def main():
-    #parser = ArgumentParser("NETWALK", formatter_class=ArgumentDefaultsHelpFormatter, conflict_handler='resolve')
-
-    #parser.add_argument('--format', default='adjlist',help='File format of input file')
     format='adjlist'
-
-    #parser.add_argument('--snap', default=10,help='number of edges in each snapshot')
-    snap=120
-
-    #parser.add_argument('--init_percent', default=0.5,help='percentage of edges in initial graph')
+    snap=2
     init_percent=0.5
-
-    #parser.add_argument('--input', nargs='?', default='../data/karate.edges',help='Input graph file')        # required=True,
+    #datasetname = 'karate'
     #input='../data/karate.edges'
-    input = '../data/cit-DBLP.edges'
-    #input = '../data/edges.csv'
-    #input = '../data/opsahl-ucsocial.n3'
-    #input = '../data/ca-HepPh.mtx'
-    #input = '../data/p2p-Gnutella08.edgelist'
-    #input='../data/ca-citeseer.mtx'
-    #input='../data/ca-netscience.mtx'
-
-    #parser.add_argument("-l", "--log", dest="log", default="INFO",help="log verbosity level")
-
-    #parser.add_argument('--matfile-variable-name', default='network',help='variable name of adjacency matrix inside a .mat file.')
-
-    #parser.add_argument('--number_walks', default=10, type=int,help='Number of random walks to start at each node')
-    number_walks=1
-
-    #parser.add_argument('--output', default='./tmp/embedding.txt',help='Output representation file')              # required=True,
-    output='./tmp/embedding.txt'
-
-    #parser.add_argument('--representation-size', default=2, type=int,help='Number of latent dimensions to learn for each node.')
-    representation_size=2
-
-    #parser.add_argument('--seed', default=24, type=int,help='Seed for random walk generator.')
+    # datasetname = 'dolphin'
+    # input = '../data/dolphins.mtx'
+    #datasetname = 'cora'
+    #input = '../data/cora.edgelist'
+    # datasetname = 'citeseer'
+    # input = '../data/citeseer.edgelist'
+    datasetname = 'toy'
+    input = '../data/toy.edges'
+    number_walks=10
+    output = './tmp/embedding_' + datasetname + '.txt'
+    representation_size=8
     seed=24
-
-    #parser.add_argument('--undirected', default=True, type=bool,help='Treat graph as undirected.')
-
-    #parser.add_argument('--walk-length', default=3, type=int,help='Length of the random walk started at each node')
     walk_length=3
-
-    #args = parser.parse_args()
-    # numeric_level = getattr(logging, args.log.upper(), None)
-    # logging.basicConfig(format=LOGFORMAT)
-    # logger.setLevel(numeric_level)
-    #static_process(args)
-    static_process(representation_size,walk_length,input,number_walks,init_percent,snap,output)
+    static_process(representation_size,walk_length,input,number_walks,init_percent,snap,output,datasetname)
 if __name__ == "__main__":
     main()

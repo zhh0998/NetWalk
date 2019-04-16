@@ -30,8 +30,6 @@ def anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0):
     #   ab_score: anomaly score for the whole snapshot, just the sum of distances to their nearest centroids
     """
 
-    print('[#s] edge encoding...\n', datetime.datetime.now())
-
     src = embedding[train[:, 0] - 1, :]
     dst = embedding[train[:, 1] - 1, :]
     test_src = embedding[synthetic_test[:, 0] - 1, :]
@@ -53,7 +51,6 @@ def anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0):
         codes = (src - dst) ** 2
         test_codes = (test_src - test_dst) ** 2
 
-    print('[#s] anomaly detection...\n', datetime.datetime.now())
 
     # conducting k-means clustering and recording centroids of different
     # clusters
