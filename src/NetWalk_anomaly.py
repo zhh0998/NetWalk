@@ -57,7 +57,15 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     ini_graph_percent = init_percent    # percent of edges in the initial graph
     anomaly_percent = 0.1                # percentage of anomaly edges in the testing edges
     alfa = 0.01 #0.5(paper)                        # updating parameter for online k-means to update clustering centroids
-    k = 7                               # number of clusters for kmeans to clustering edges
+    if(datasetname=="karate"):
+        k=4
+    elif(datasetname=="toy"):
+        k=2
+    elif(datasetname=="cora"):
+        k=7
+    elif(datasetname=="citeseer")
+        k = 6                             # number of clusters for kmeans to clustering edges
+    print("No of Clusters in Dataset "+str(datasetname)+" is "+str(k))
     # endregion
 
     # region STEP 1: Generates Anomaly data: training data and testing list of edges(for online updating)
@@ -158,21 +166,21 @@ def getEmbedding(model, data, n):
 
 def main():
     # region Parameter Initialise
-    snap = 400
+    snap = 10
     init_percent = 0.5
-    #datasetname = 'karate'
-    #input = '../data/karate.edges'
+    datasetname = 'karate'
+    input = '../data/karate.edges'
     #datasetname = 'dolphin'
     #input = '../data/dolphins.mtx'
-    datasetname = 'cora'
-    input = '../data/cora.edgelist'
+    # datasetname = 'cora'
+    # input = '../data/cora.edgelist'
     # datasetname = 'citeseer'
     # input = '../data/citeseer.edgelist'
     #datasetname = 'toy'
     #input = '../data/toy.edges'
     number_walks = 20
     output = './tmp/embedding_' + datasetname + '.txt'
-    representation_size = 128
+    representation_size = 16
     seed = 24
     walk_length = 3
     # endregion
