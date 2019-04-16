@@ -55,7 +55,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     optimizer = "adam"                  #"rmsprop"#"gd"#"rmsprop" #"""gd"#""lbfgs"
     corrupt_prob = [0]                  # corrupt probability, for denoising AE
     ini_graph_percent = init_percent    # percent of edges in the initial graph
-    anomaly_percent = 0.5                # percentage of anomaly edges in the testing edges
+    anomaly_percent = 0.1                # percentage of anomaly edges in the testing edges
     alfa = 0.01 #0.5(paper)                        # updating parameter for online k-means to update clustering centroids
     k = 2                               # number of clusters for kmeans to clustering edges
     # endregion
@@ -158,7 +158,7 @@ def getEmbedding(model, data, n):
 
 def main():
     # region Parameter Initialise
-    snap = 10
+    snap = 400
     init_percent = 0.5
     #datasetname = 'karate'
     #input = '../data/karate.edges'
@@ -172,7 +172,7 @@ def main():
     #input = '../data/toy.edges'
     number_walks = 20
     output = './tmp/embedding_' + datasetname + '.txt'
-    representation_size = 1024
+    representation_size = 128
     seed = 24
     walk_length = 3
     # endregion
