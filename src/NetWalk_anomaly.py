@@ -15,6 +15,7 @@ from framework.anomaly_generation import anomaly_generation
 from framework.load_email_eu import load_email_eu
 from framework.anomaly_detection import anomaly_detection
 from framework.anomaly_detection_stream import anomaly_detection_stream
+import matplotlib.pyplot as plt
 
 from datetime import datetime
 import tensorflow as tf
@@ -63,7 +64,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         k=2
     elif(datasetname=="cora"):
         k=7
-    elif(datasetname=="citeseer")
+    elif(datasetname=="citeseer"):
         k = 6                             # number of clusters for kmeans to clustering edges
     print("No of Clusters in Dataset "+str(datasetname)+" is "+str(k))
     # endregion
@@ -95,8 +96,12 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     # endregion
 
     # region conduct anomaly detection using first snapshot of testing edges
+    accuracy=[]
+    networkLen=[]
     test_piece=synthetic_test[0:snap, :]
     scores, auc, n0, c0, res, ab_score = anomaly_detection(embedding, train, test_piece, k)
+    accuracy.append(auc)
+    networkLen.append(len(train))
     #scores, auc, n0, c0, res, ab_score = anomaly_detection(embedding, train, synthetic_test, k)
     print('initial auc of anomaly detection:', auc)
     print('initial anomaly score:', ab_score)
@@ -132,6 +137,8 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
         # online anomaly detection, each execution will update the clustering center
         scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
+        accuracy.append(auc)
+        networkLen.append(len(train))
         #scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0)
         print('auc of anomaly detection at snapshot %d: %f'  % (snapshotNum, auc))
         print('anomaly score at snapshot %d: %f' % (snapshotNum, ab_score))
@@ -140,6 +147,8 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
         # visualizing anomaly score of current snapshot
         #d_plot.addPoint(snapshotNum, ab_score)
+    plt.plot(networkLen,accuracy)
+    plt.savefig('../plots/anomalyaccuracy_' + datasetname + '.png')
     # endregion
 
     # region Figure Plot
@@ -166,21 +175,24 @@ def getEmbedding(model, data, n):
 
 def main():
     # region Parameter Initialise
-    snap = 10
     init_percent = 0.5
-    datasetname = 'karate'
-    input = '../data/karate.edges'
+    # datasetname = 'karate'
+    # input = '../data/karate.edges'
     #datasetname = 'dolphin'
     #input = '../data/dolphins.mtx'
     # datasetname = 'cora'
     # input = '../data/cora.edgelist'
     # datasetname = 'citeseer'
     # input = '../data/citeseer.edgelist'
-    #datasetname = 'toy'
-    #input = '../data/toy.edges'
+    datasetname = 'toy'
+    input = '../data/toy.edges'
     number_walks = 20
     output = './tmp/embedding_' + datasetname + '.txt'
     representation_size = 16
+    if (datasetname == "karate"):
+        snap = 10
+    elif (datasetname == "toy"):
+        snap = 3
     seed = 24
     walk_length = 3
     # endregion
