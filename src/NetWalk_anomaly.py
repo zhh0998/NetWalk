@@ -200,6 +200,9 @@ def main():
     elif (datasetname == "dolphin"):
         snap = 10
         representation_size = 32
+    elif (datasetname == "cora"):
+        snap = 400
+        representation_size = 128
     seed = 24
     walk_length = 3
     # endregion
