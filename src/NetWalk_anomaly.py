@@ -57,7 +57,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     ini_graph_percent = init_percent    # percent of edges in the initial graph
     anomaly_percent = 0.1                # percentage of anomaly edges in the testing edges
     alfa = 0.01 #0.5(paper)                        # updating parameter for online k-means to update clustering centroids
-    k = 2                               # number of clusters for kmeans to clustering edges
+    k = 7                               # number of clusters for kmeans to clustering edges
     # endregion
 
     # region STEP 1: Generates Anomaly data: training data and testing list of edges(for online updating)
