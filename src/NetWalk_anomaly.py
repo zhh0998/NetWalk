@@ -201,10 +201,10 @@ def main():
     # input = '../data/karate.edges'
     # datasetname = 'dolphin'
     # input = '../data/dolphins.mtx'
-    datasetname = 'cora'
-    input = '../data/cora.edgelist'
-    #datasetname = 'citeseer'
-    #input = '../data/citeseer.edgelist'
+    # datasetname = 'cora'
+    # input = '../data/cora.edgelist'
+    datasetname = 'citeseer'
+    input = '../data/citeseer.edgelist'
     # datasetname = 'toy'
     # input = '../data/toy.edges'
     number_walks = 20
@@ -220,6 +220,9 @@ def main():
         representation_size = 32
     elif (datasetname == "cora"):
         snap = 400
+        representation_size = 64
+    elif (datasetname == "citeseer"):
+        snap = 600
         representation_size = 128
     seed = 24
     walk_length = 3
