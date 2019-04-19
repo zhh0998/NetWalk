@@ -103,7 +103,8 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     # region conduct anomaly detection using first snapshot of testing edges
     areaUnderCurve=[]
     xValue=[]
-    test_piece=synthetic_test[0:snap, :]
+    #test_piece=synthetic_test[0:snap, :]
+    test_piece = synthetic_test
     scores, auc, n0, c0, res, ab_score = anomaly_detection(embedding, train, test_piece, k)
     areaUnderCurve.append(auc)
     xValue.append(0)
@@ -121,12 +122,12 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         snapshot_data = netwalk.nextOnehotWalks()
         embedding = getEmbedding(embModel, snapshot_data, n)
         # endregion
-        if netwalk.hasNext():
-            if len(synthetic_test) > snap * (snapshotNum + 1):
-                #test_piece = synthetic_test[snap * snapshotNum:snap * (snapshotNum + 1), :]
-                test_piece = synthetic_test[:snap * (snapshotNum + 1), :]
-            else:
-                test_piece = synthetic_test
+        # if netwalk.hasNext():
+        #     if len(synthetic_test) > snap * (snapshotNum + 1):
+        #         #test_piece = synthetic_test[snap * snapshotNum:snap * (snapshotNum + 1), :]
+        #         test_piece = synthetic_test[:snap * (snapshotNum + 1), :]
+        #     else:
+        #         test_piece = synthetic_test
         # online anomaly detection, each execution will update the clustering center
         scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
         print('auc of anomaly detection at snapshot %d: %f' % (snapshotNum, auc))
@@ -158,8 +159,8 @@ def getEmbedding(model, data, n):
 def main():
     # region Parameter Initialise
     init_percent = 0.5
-    datasetname=sys.argv[1]
-    #datasetname = 'karate'
+    #datasetname=sys.argv[1]
+    datasetname = 'karate'
     # datasetname = 'dolphin'
     #
     # datasetname = 'cora'
