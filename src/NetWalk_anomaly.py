@@ -17,7 +17,7 @@ from framework.anomaly_detection import anomaly_detection
 from framework.anomaly_detection_stream import anomaly_detection_stream
 import matplotlib.pyplot as plt
 import sys
-from datetime import datetime
+import datetime
 import tensorflow as tf
 import numpy as np
 import plots.DynamicUpdate as DP
@@ -184,7 +184,7 @@ def main():
     elif (datasetname == "cora"):
         input = '../data/cora.edgelist'
         snap = 400
-        representation_size = 64
+        representation_size = 128
     elif (datasetname == "citeseer"):
         input = '../data/citeseer.edgelist'
         snap = 600
