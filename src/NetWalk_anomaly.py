@@ -78,7 +78,8 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
     # region STEP 1: Generates Anomaly data: training data and testing list of edges(for online updating)
     membership_path="./tmp/membership_"+datasetname+".txt"
-    synthetic_test, train_mat, train = anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path)
+    #synthetic_test, train_mat, train = anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path)
+    synthetic_test, train_mat, train = anomaly_generation(0.7, anomaly_percent, data, n, m,membership_path)
     data_zip = []
     data_zip.append(synthetic_test)
     data_zip.append(train)
@@ -134,7 +135,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         xValue.append(snapshotNum)
         snapshotNum += 1
     plt.plot(xValue, areaUnderCurve)
-    plt.savefig('../plots/anomalyaccuracy_' + datasetname + '.png')
+    plt.savefig('../plots/anomalyaccuracy_' + datasetname +str(datetime.datetime.now())+'.png')
     # endregion
 
 
@@ -157,8 +158,8 @@ def getEmbedding(model, data, n):
 def main():
     # region Parameter Initialise
     init_percent = 0.5
-    datasetname=sys.argv[1]
-    #datasetname = 'karate'
+    #datasetname=sys.argv[1]
+    datasetname = 'karate'
     # datasetname = 'dolphin'
     #
     # datasetname = 'cora'
