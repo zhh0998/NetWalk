@@ -16,7 +16,7 @@ from framework.load_email_eu import load_email_eu
 from framework.anomaly_detection import anomaly_detection
 from framework.anomaly_detection_stream import anomaly_detection_stream
 import matplotlib.pyplot as plt
-
+import sys
 from datetime import datetime
 import tensorflow as tf
 import numpy as np
@@ -42,43 +42,44 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     # endregion
 
     # region Parameters
-    hidden_size = representation_size   # size of hidden codes to learn, default is 20
+    hidden_size = representation_size                 # size of hidden codes to learn, default is 20
     dimension = [n, hidden_size]
     activation = tf.nn.sigmoid
-    rho = 0.5                           # sparsity ratio
-    lamb = 0.0017                       # weight decay
-    beta = 1                            # sparsity weight
-    gama = 340                          # autoencoder weight
-    walk_len = walk_length
-    epoch = 30                          # number of epoch for optimizing, could be larger
-    batch_size = 40                     # should be smaller or equal to args.number_walks*n
-    learning_rate = 0.01                # learning rate, for adam, using 0.01, for rmsprop using 0.1
-    optimizer = "adam"                  #"rmsprop"#"gd"#"rmsprop" #"""gd"#""lbfgs"
-    corrupt_prob = [0]                  # corrupt probability, for denoising AE
-    ini_graph_percent = init_percent    # percent of edges in the initial graph
-    #anomaly_percent = 1 #0.1 for bigger               # percentage of anomaly edges in the testing edges
-    anomaly_percent = 0.1
-    alfa = 0.01 #0.5(paper)                        # updating parameter for online k-means to update clustering centroids
+    rho = 0.5                                         # sparsity ratio
+    lamb = 0.0017                                     # weight decay
+    beta = 1                                          # sparsity weight
+    gama = 340                                        # autoencoder weight
+    walk_len = walk_length                            # Length of each walk
+    epoch = 30                                        # number of epoch for optimizing, could be larger
+    batch_size = 40                                   # should be smaller or equal to args.number_walks*n
+    learning_rate = 0.01                              # learning rate, for adam, using 0.01, for rmsprop using 0.1
+    optimizer = "adam"                                #"rmsprop"#"gd"#"rmsprop" #"""gd"#""lbfgs"
+    corrupt_prob = [0]                                # corrupt probability, for denoising AE
+    ini_graph_percent = init_percent                  # percent of edges in the initial graph
+    alfa = 0.01 #0.5(paper)                           # updating parameter for online k-means to update clustering centroids
     if(datasetname=="karate"):
+        anomaly_percent = 0.1
         k=4
     elif(datasetname=="toy"):
+        anomaly_percent = 1
         k=2
     elif(datasetname=="cora"):
+        anomaly_percent = 0.1
         k=7
     elif(datasetname=="citeseer"):
+        anomaly_percent = 0.1
         k = 6
     elif (datasetname == "dolphin"):
-        k = 3                                                  # number of clusters for kmeans to clustering edges
+        anomaly_percent = 0.1
+        k = 3
 
     print("No of Clusters in Dataset "+str(datasetname)+" is "+str(k))
     # endregion
 
     # region STEP 1: Generates Anomaly data: training data and testing list of edges(for online updating)
     membership_path="./tmp/membership_"+datasetname+".txt"
-    synthetic_test, train_mat, train,anomalies = anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path)
+    synthetic_test, train_mat, train = anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path)
     data_zip = []
-    # data_zip.append(synthetic_test)
-    # data_zip.append(train)
     data_zip.append(synthetic_test)
     data_zip.append(train)
     # endregion
@@ -97,84 +98,43 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     embedding = getEmbedding(embModel, ini_data, n)
     # endregion
 
-    # region dynaimically plot the anomaly score over different snapshots(Instantiate the plot)
-    #d_plot = DP.DynamicUpdate()
-    # endregion
 
     # region conduct anomaly detection using first snapshot of testing edges
-    accuracy=[]
-    networkLen=[]
-    test_piece=[]
-    trainvertices=np.unique(train)
-    for edge in anomalies:
-        if (edge[0] in trainvertices and edge[1] in trainvertices) :
-            test_piece.append(edge)
-    #test_piece=anomalies
-    test_piece=np.array(test_piece)
+    areaUnderCurve=[]
+    xValue=[]
+    test_piece=synthetic_test[0:snap, :]
     scores, auc, n0, c0, res, ab_score = anomaly_detection(embedding, train, test_piece, k)
-    accuracy.append(auc)
-    networkLen.append(len(train))
+    areaUnderCurve.append(auc)
+    xValue.append(0)
     #scores, auc, n0, c0, res, ab_score = anomaly_detection(embedding, train, synthetic_test, k)
     print('initial auc of anomaly detection:', auc)
     print('initial anomaly score:', ab_score)
-    # endregion
-
-    # region visualize anomaly score for initial setup
-    #d_plot.addPoint(1, ab_score)
     # endregion
 
     # region Online Increment
     # STEP 3: over different snapshots of edges, dynamically updating embeddings of nodes and conduct
     #         online anomaly detection for edges, visualize the anomaly score of each snapshot
     snapshotNum = 1
-    while(netwalk.hasNext()):
+    while (netwalk.hasNext()):
         # region Include next walks dynamically and find embedding
         snapshot_data = netwalk.nextOnehotWalks()
         embedding = getEmbedding(embModel, snapshot_data, n)
         # endregion
-        # for item in test_piece:
-        #     if(item[2]==0):
-        #         train = np.vstack((train, item[:2]))
-        # if netwalk.hasNext():
-        #     if len(synthetic_test) > snap*(snapshotNum+1):
-        #         #test_piece = synthetic_test[snap*snapshotNum:snap*(snapshotNum+1), :]
-        #         test_piece = synthetic_test[:snap * (snapshotNum + 1), :]
-        #     else:
-        #         #test_piece = synthetic_test[snap * snapshotNum:, :]
-        #         test_piece = synthetic_test
-
-        train=np.concatenate((train,synthetic_test[snap*(snapshotNum-1):snap*(snapshotNum),:2]),axis=0)
-        test_piece = []
-        #rows = train.flatten()
-        trainvertices1 = np.unique(train)
-        for edge in anomalies:
-            if (edge[0] in trainvertices and edge[1] in trainvertices1):
-                test_piece.append(edge)
-        test_piece = np.array(test_piece)
-        # else:
-        #     return
-
+        if netwalk.hasNext():
+            if len(synthetic_test) > snap * (snapshotNum + 1):
+                #test_piece = synthetic_test[snap * snapshotNum:snap * (snapshotNum + 1), :]
+                test_piece = synthetic_test[:snap * (snapshotNum + 1), :]
+            else:
+                test_piece = synthetic_test
         # online anomaly detection, each execution will update the clustering center
         scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
-        accuracy.append(auc)
-        networkLen.append(len(train))
-        #scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0)
-        print('auc of anomaly detection at snapshot %d: %f'  % (snapshotNum, auc))
+        print('auc of anomaly detection at snapshot %d: %f' % (snapshotNum, auc))
         print('anomaly score at snapshot %d: %f' % (snapshotNum, ab_score))
-
+        areaUnderCurve.append(auc)
+        xValue.append(snapshotNum)
         snapshotNum += 1
-
-        # visualizing anomaly score of current snapshot
-        #d_plot.addPoint(snapshotNum, ab_score)
-    cores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
-    print('Final Accuracy: %f' % (auc))
-    plt.plot(networkLen,accuracy)
+    plt.plot(xValue, areaUnderCurve)
     plt.savefig('../plots/anomalyaccuracy_' + datasetname + '.png')
-    # endregion
-
-    # region Figure Plot
-    # fig = d_plot.figure
-    # fig.savefig('../plots/anomalygraph_' + datasetname + '.png')
     # endregion
 
 
@@ -197,34 +157,37 @@ def getEmbedding(model, data, n):
 def main():
     # region Parameter Initialise
     init_percent = 0.5
-    # datasetname = 'karate'
-    # input = '../data/karate.edges'
+    datasetname=sys.argv[1]
+    #datasetname = 'karate'
     # datasetname = 'dolphin'
-    # input = '../data/dolphins.mtx'
+    #
     # datasetname = 'cora'
-    # input = '../data/cora.edgelist'
-    datasetname = 'citeseer'
-    input = '../data/citeseer.edgelist'
+    #
+    # datasetname = 'citeseer'
+    #
     # datasetname = 'toy'
-    # input = '../data/toy.edges'
     number_walks = 20
     output = './tmp/embedding_' + datasetname + '.txt'
     if (datasetname == "karate"):
+        input = '../data/karate.edges'
         snap = 10
         representation_size = 32
     elif (datasetname == "toy"):
+        input = '../data/toy.edges'
         snap = 2
         representation_size = 8
     elif (datasetname == "dolphin"):
+        input = '../data/dolphins.mtx'
         snap = 10
         representation_size = 32
     elif (datasetname == "cora"):
+        input = '../data/cora.edgelist'
         snap = 400
         representation_size = 64
     elif (datasetname == "citeseer"):
+        input = '../data/citeseer.edgelist'
         snap = 600
         representation_size = 128
-    seed = 24
     walk_length = 3
     # endregion
 

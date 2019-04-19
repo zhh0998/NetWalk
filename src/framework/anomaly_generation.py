@@ -53,17 +53,6 @@ def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership
     test = data[train_num:, :]
     # endregion
 
-    # region Spectral Clustering Part(Commented)
-    # Make Adjacency Matrix of whole Data
-    # data to adjacency_matrix(edgelist to Adj)
-    #adjacency_matrix = edgeList2Adj(data)
-
-    # clustering nodes to clusters using spectral clustering
-    # kk = 4
-    # sc = SpectralClustering(kk, affinity='precomputed', n_init=100, assign_labels = 'discretize')
-    # labels = sc.fit_predict(adjacency_matrix)
-    # endregion
-
     # region Read Cluster labeling from membership.txt file
     labels=[]
     with open(membership_path, 'r') as member:
@@ -114,8 +103,7 @@ def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership
     # sparse(train(:,1), train(:,2), ones(length(train), 1), n, n) #TODO: node addition
     train_mat = train_mat + train_mat.transpose()
 
-    #return synthetic_test, train_mat, train
-    return test, train_mat, train,anomalies
+    return synthetic_test, train_mat, train
 
 
 

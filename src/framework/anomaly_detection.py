@@ -67,10 +67,7 @@ def anomaly_detection(embedding, train, synthetic_test, k):
     assert (len(n) == k)
 
 
-    #labels = synthetic_test[:, 2]
-    # labels=[]
-    # for i in range(len(labels)):
-    #     labels.append(1)
+    labels = synthetic_test[:, 2]
     # calculating distances for testing edge codes to centroids of clusters
     dist_center = cdist(test_codes, c)
     # assinging each testing edge code to nearest centroid
@@ -81,13 +78,12 @@ def anomaly_detection(embedding, train, synthetic_test, k):
 
 
     #calculating auc score of anomly detection task, in case that all labels are 0's or all 1's
-    # if np.sum(labels) == 0:
-    #     labels[0] = 1
-    # elif np.sum(labels) == len(labels):
-    #     labels[0] = 0
-    #
-    # auc = roc_auc_score(labels, min_dist)
+    if np.sum(labels) == 0:
+        labels[0] = 1
+    elif np.sum(labels) == len(labels):
+        labels[0] = 0
 
+    auc = roc_auc_score(labels, min_dist)
 
     # calculating distances for testing edge codes to centroids of clusters
     dist_center_tr = cdist(codes, c)
@@ -95,11 +91,7 @@ def anomaly_detection(embedding, train, synthetic_test, k):
     max_dist_tr = np.max(min_dist_tr)
     res = [1 if x > max_dist_tr else 0 for x in min_dist]
     ab_score = np.sum(min_dist) / (1e-10 + len(min_dist))
-    accuracy = 0
-    for result in res:
-        if(result==1):
-            accuracy=accuracy+1
-    auc=accuracy/len(res)
+
     return scores, auc, n, c, res, ab_score
 
 

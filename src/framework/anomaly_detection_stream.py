@@ -75,10 +75,7 @@ def anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0):
         (alfa * c0 * np.transpose(np.tile(n0, (c0.shape[1], 1))) + (1 - alfa) * centroids * np.transpose(np.tile(n, (centroids.shape[1], 1)))), (
             alfa * np.transpose(np.tile(n0, (c0.shape[1], 1))) + (1 - alfa) * np.transpose(np.tile(n, (centroids.shape[1], 1)))))
 
-    #labels = synthetic_test[:, 2]
-    labels = []
-    for i in range(len(labels)):
-        labels.append(1)
+    labels = synthetic_test[:, 2]
 
     # calculating distances for testing edge codes to centroids of clusters
     dist_center = cdist(test_codes, c)
@@ -91,12 +88,12 @@ def anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0):
     scores = scores[::-1] + 1
 
     #calculating auc score of anomly detection task, in case that all labels are 0's or all 1's
-    # if np.sum(labels) == 0:
-    #     labels[0] = 1
-    # elif np.sum(labels) == len(labels):
-    #     labels[0] = 0
-    #
-    # auc = roc_auc_score(labels, min_dist)#scores)
+    if np.sum(labels) == 0:
+        labels[0] = 1
+    elif np.sum(labels) == len(labels):
+        labels[0] = 0
+
+    auc = roc_auc_score(labels, min_dist)#scores)
 
     # calculating distances for testing edge codes to centroids of clusters
     dist_center_tr = cdist(codes, c)
@@ -105,9 +102,5 @@ def anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0):
     res = [1 if x > max_dist_tr else 0 for x in min_dist]
     # ab_score = np.sum(res)/(1e-10 + len(res))
     ab_score = np.sum(min_dist) / (1e-10 + len(min_dist))
-    accuracy = 0
-    for result in res:
-        if (result == 1):
-            accuracy = accuracy + 1
-    auc = accuracy / len(res)
+
     return scores, auc, n, c, res, ab_score
