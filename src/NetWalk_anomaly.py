@@ -50,7 +50,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     beta = 1                                          # sparsity weight
     gama = 340                                        # autoencoder weight
     walk_len = walk_length                            # Length of each walk
-    epoch = 30                                        # number of epoch for optimizing, could be larger
+    epoch = 50                                        # number of epoch for optimizing, could be larger
     batch_size = 40                                   # should be smaller or equal to args.number_walks*n
     learning_rate = 0.01                              # learning rate, for adam, using 0.01, for rmsprop using 0.1
     optimizer = "adam"                                #"rmsprop"#"gd"#"rmsprop" #"""gd"#""lbfgs"
@@ -58,7 +58,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     ini_graph_percent = init_percent                  # percent of edges in the initial graph
     alfa = 0.01 #0.5(paper)                           # updating parameter for online k-means to update clustering centroids
     if(datasetname=="karate"):
-        anomaly_percent = 0.1
+        anomaly_percent = 0.3
         k=4
     elif(datasetname=="toy"):
         anomaly_percent = 1
@@ -79,7 +79,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     # region STEP 1: Generates Anomaly data: training data and testing list of edges(for online updating)
     membership_path="./tmp/membership_"+datasetname+".txt"
     #synthetic_test, train_mat, train = anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path)
-    synthetic_test, train_mat, train = anomaly_generation(0.7, anomaly_percent, data, n, m,membership_path)
+    synthetic_test, train_mat, train = anomaly_generation(0.8, anomaly_percent, data, n, m,membership_path)
     data_zip = []
     data_zip.append(synthetic_test)
     data_zip.append(train)
@@ -135,6 +135,9 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         areaUnderCurve.append(auc)
         xValue.append(snapshotNum)
         snapshotNum += 1
+    # scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
+    # print('Final auc of anomaly detection at snapshot %d: %f' % (snapshotNum, auc))
+    # print('Final anomaly score at snapshot %d: %f' % (snapshotNum, ab_score))
     plt.plot(xValue, areaUnderCurve)
     plt.savefig('../plots/anomalyaccuracy_' + datasetname +str(datetime.datetime.now())+'.png')
     # endregion
@@ -159,15 +162,15 @@ def getEmbedding(model, data, n):
 def main():
     # region Parameter Initialise
     init_percent = 0.5
-    datasetname=sys.argv[1]
-    #datasetname = 'karate'
+    #datasetname=sys.argv[1]
+    datasetname = 'karate'
     # datasetname = 'dolphin'
     #
     # datasetname = 'cora'
     #
     # datasetname = 'citeseer'
     #
-    # datasetname = 'toy'
+    #datasetname = 'toy'
     number_walks = 20
     output = './tmp/embedding_' + datasetname + '.txt'
     if (datasetname == "karate"):

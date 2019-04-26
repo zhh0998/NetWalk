@@ -6,10 +6,10 @@
     Author: Wei Cheng <weicheng@nec-labs.com>
     Affiliation: NEC Labs America
 """
-import datetime
 import numpy as np
 from scipy.sparse import csr_matrix
-from sklearn.cluster import SpectralClustering
+import operator
+import random
 
 
 def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership_path=""):
@@ -47,10 +47,62 @@ def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership
 
     # region train and test edges
     # select top train_num edges(0:train_num) as in the training set
-    train = data[0:train_num, :]
+    train=[]
+    nodes=np.unique(data)
+    degree={}
+    for edge in data:
+        src=edge[0]
+        dest=edge[1]
+        if src in degree:
+            degree[src]=degree[src]+1
+        else:
+            degree[src] =1
+        if dest in degree:
+            degree[dest]=degree[dest]+1
+        else:
+            degree[dest] =1
+    sdegree=sorted(degree.items(), key=operator.itemgetter(1))
+    for item in sdegree:
+        node=item[0]
+        deg=item[1]
+        edgeList=[]
+        for edge in data:
+            src = edge[0]
+            dest = edge[1]
+            if(src==node or dest==node):
+                edgeList.append(edge)
+        if(degree==1):
+            if(len(train)==0):
+                train.append(list(edgeList[0]))
+            else:
+                if(list(edgeList[0]) not in train):
+                    train.append(list(edgeList[0]))
+        else:
+            for edge in edgeList:
+                if (len(train) == 0):
+                    train.append(list(edge))
+                    break
+                else:
+                    if list(edge) not in train:
+                        train.append(list(edge))
+                        break
+    while(train_num>len(train)):
+        remainingEdges=train_num-len(train)
+        randindx=random.randint(1,np.shape(data)[0]-1)
+        edge=data[randindx]
+        if(list(edge) not in train):
+            train.append(list(edge))
+
+    test=[]
+    for edge in data:
+        if list(edge) not in train:
+            test.append(list(edge))
+    train=np.array(train)
+    test=np.array(test)
+    #train = data[0:train_num, :]
 
     # select the other edges as the testing set
-    test = data[train_num:, :]
+    #test = data[train_num:, :]
     # endregion
 
     # region Read Cluster labeling from membership.txt file
