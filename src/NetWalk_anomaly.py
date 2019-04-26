@@ -188,11 +188,11 @@ def main():
         representation_size = 32
     elif (datasetname == "cora"):
         input = '../data/cora.edgelist'
-        snap = 400
+        snap = 100
         representation_size = 128
     elif (datasetname == "citeseer"):
         input = '../data/citeseer.edgelist'
-        snap = 600
+        snap = 200
         representation_size = 128
     walk_length = 3
     # endregion
