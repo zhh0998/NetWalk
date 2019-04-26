@@ -139,6 +139,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     # print('Final auc of anomaly detection at snapshot %d: %f' % (snapshotNum, auc))
     # print('Final anomaly score at snapshot %d: %f' % (snapshotNum, ab_score))
     plt.plot(xValue, areaUnderCurve)
+    plt.yticks(np.arange(0, 100, 5))
     plt.savefig('../plots/anomalyaccuracy_' + datasetname +str(datetime.datetime.now())+'.png')
     # endregion
 
