@@ -37,7 +37,7 @@ def anomaly_detection_stream(embedding, train, synthetic_test, k, alfa, n0, c0):
 
     # the edge encoding
     # refer Section 3.3 Edge Encoding in the KDD paper for details
-    encoding_method = 'Hadamard'
+    encoding_method = 'Average'
     if encoding_method == 'Average':
         codes = (src + dst) / 2
         test_codes = (test_src + test_dst) / 2

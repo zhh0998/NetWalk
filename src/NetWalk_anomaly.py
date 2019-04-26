@@ -1,14 +1,4 @@
-"""
-    Created on: 2018-12-24
-    License: BSD 3 clause
-
-    Copyright (C) 2018
-    Author: Wei Cheng <weicheng@nec-labs.com> & Wenchao Yu
-    Affiliation: NEC Labs America
-"""
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import logging
-
 from framework.imports import *
 import framework.Model as MD
 from framework.anomaly_generation import anomaly_generation

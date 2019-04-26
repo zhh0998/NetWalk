@@ -71,7 +71,7 @@ def anomaly_generation(ini_graph_percent, anomaly_percent, data, n, m,membership
             dest = edge[1]
             if(src==node or dest==node):
                 edgeList.append(edge)
-        if(degree==1):
+        if(deg==1):
             if(len(train)==0):
                 train.append(list(edgeList[0]))
             else:

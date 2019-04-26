@@ -273,29 +273,33 @@ class NetWalk_update:
         if isinstance(path, str):
             self.data = self.__get_data()   #call _get_data() method of this class
         else:
-            test = path[0][:, 0:2]
-            train = path[1]
-            self.data = self.__get_data_mat(test, train)
+            train=path
+            #test = path[0][:, 0:2]
+            #train = path[1]
+            #self.data = self.__get_data_mat(test, train)
+            self.data = self.__get_data_mat(train)
         init_edges, snapshots,_ = self.data
         self.walk_update = WalkUpdate(init_edges, self.vertices, walk_len=self.walk_len, walk_per_node=self.walk_per_node, prev_percent=1, seed=24,snap=snap)
 
-    def __get_data_mat(self, test, train):
+    #def __get_data_mat(self, test, train):
+    def __get_data_mat(self,train):
         """
         Generate initial walk list for training and list of walk lists in each upcoming snapshot
         :param test: edge list for testing
         :param train: edge list for training
         :return: initial walk list for training and list of walk lists in each upcoming snapshot
         """
-        edges = np.concatenate((train, test), axis=0)
+        #edges = np.concatenate((train, test), axis=0)
+        edges=train
         self.vertices = np.unique(edges)
         init_edges = train
         print("total edges: %d, initial edges: %d; total vertices: %d"% (len(edges), len(init_edges), len(self.vertices)))
         snapshots = []
         current = 0
-        while current < len(test):
+        while current < len(train):
             # if index >= len(edges), equals to edges[current:]
             # length of last snapshot <= self.snap
-            snapshots.append(test[current:current + self.snap])
+            snapshots.append(train[current:current + self.snap])
             current += self.snap
         print("number of snapshots: %d, edges in each snapshot: %d" % (len(snapshots), self.snap))
         data = (init_edges, snapshots,edges)
