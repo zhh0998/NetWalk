@@ -203,7 +203,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     beta = 1                                          # sparsity weight
     gama = 340                                        # autoencoder weight
     walk_len = walk_length                            # Length of each walk
-    epoch = 100                                        # number of epoch for optimizing, could be larger
+    epoch = 50                                        # number of epoch for optimizing, could be larger
     batch_size = 40                                   # should be smaller or equal to args.number_walks*n
     learning_rate = 0.01                              # learning rate, for adam, using 0.01, for rmsprop using 0.1
     optimizer = "adam"                                #"rmsprop"#"gd"#"rmsprop" #"""gd"#""lbfgs"
@@ -211,7 +211,7 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
     ini_graph_percent = init_percent                  # percent of edges in the initial graph
     alfa = 0.01 #0.5(paper)                           # updating parameter for online k-means to update clustering centroids
     if(datasetname=="karate"):
-        anomaly_percent = 0.3
+        anomaly_percent = 0.1
         k=4
     elif(datasetname=="toy"):
         anomaly_percent = 1
@@ -241,13 +241,14 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
     # region STEP 2: Learning initial embeddings for training edges
     embedding = getEmbedding(embModel, ini_data, n)
-    f = open("../plots/results_"+str(datasetname)+".txt", "w")
+    f = open("../plots/linkresults_"+str(datasetname)+str(datetime.datetime.now())+".txt", "w")
     # endregion
     AccuracyList=[]
     xValue=[1]
     accuracy=linkPrediction(embedding,np.array(trainData),trainLabels,np.array(testData),testLabels)
     f.write("Accuracy " + str(accuracy))
     f.write("\n")
+    f.close()
     AccuracyList.append(accuracy)
     #print("Accuracy ",accuracy)
     # region Online Increment
@@ -259,22 +260,26 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         snapshot_data = netwalk.nextOnehotWalks()
         embedding = getEmbedding(embModel, snapshot_data, n)
         accuracy = linkPrediction(embedding, np.array(trainData), trainLabels, np.array(testData), testLabels)
+        f = open("../plots/linkresults_" + str(datasetname) + str(datetime.datetime.now()) + ".txt", "w")
         f.write("Accuracy " + str(accuracy))
         f.write("\n")
+        f.close()
         AccuracyList.append(accuracy)
         #print("Accuracy ", accuracy)
         snapshotNum += 1
         xValue.append(snapshotNum)
+    f = open("../plots/linkresults_" + str(datasetname) + str(datetime.datetime.now()) + ".txt", "w")
     accuracy = linkPrediction(embedding, np.array(trainData), trainLabels, np.array(testData), testLabels)
     f.write("Final Accuracy " + str(accuracy))
     f.write("\n")
+    f.close()
     print("Final Accuracy ", accuracy)
     # scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
     # print('Final auc of anomaly detection at snapshot %d: %f' % (snapshotNum, auc))
     # print('Final anomaly score at snapshot %d: %f' % (snapshotNum, ab_score))
     plt.plot(xValue, AccuracyList)
     plt.yticks(np.arange(0, 1, .1))
-    plt.savefig('../plots/anomalyaccuracy_' + datasetname +str(datetime.datetime.now())+'.png')
+    plt.savefig('../plots/linkaccuracy_' + datasetname +str(datetime.datetime.now())+'.png')
     # endregion
 
 

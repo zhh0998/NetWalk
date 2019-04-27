@@ -153,8 +153,8 @@ def getEmbedding(model, data, n):
 def main():
     # region Parameter Initialise
     init_percent = 0.5
-    #datasetname=sys.argv[1]
-    datasetname = 'karate'
+    datasetname=sys.argv[1]
+    #datasetname = 'karate'
     # datasetname = 'dolphin'
     #
     # datasetname = 'cora'

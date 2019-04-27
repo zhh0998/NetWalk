@@ -1,0 +1,10 @@
+Accuracy 0.6
+Accuracy 0.6
+Accuracy 0.4
+Accuracy 0.6
+Accuracy 0.6
+Accuracy 0.6
+Accuracy 0.6
+Accuracy 0.6
+Accuracy 0.7
+Final Accuracy 0.7

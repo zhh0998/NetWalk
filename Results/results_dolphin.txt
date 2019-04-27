@@ -1,0 +1,18 @@
+Accuracy 0.75
+Accuracy 0.8
+Accuracy 0.75
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Accuracy 0.8
+Final Accuracy 0.8
