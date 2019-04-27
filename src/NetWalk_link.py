@@ -241,10 +241,13 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
 
     # region STEP 2: Learning initial embeddings for training edges
     embedding = getEmbedding(embModel, ini_data, n)
+    f = open("../plots/results_"+str(datasetname)+".txt", "w")
     # endregion
     AccuracyList=[]
     xValue=[1]
     accuracy=linkPrediction(embedding,np.array(trainData),trainLabels,np.array(testData),testLabels)
+    f.write("Accuracy " + str(accuracy))
+    f.write("\n")
     AccuracyList.append(accuracy)
     #print("Accuracy ",accuracy)
     # region Online Increment
@@ -256,11 +259,15 @@ def static_process(representation_size,walk_length,input,number_walks,init_perce
         snapshot_data = netwalk.nextOnehotWalks()
         embedding = getEmbedding(embModel, snapshot_data, n)
         accuracy = linkPrediction(embedding, np.array(trainData), trainLabels, np.array(testData), testLabels)
+        f.write("Accuracy " + str(accuracy))
+        f.write("\n")
         AccuracyList.append(accuracy)
         #print("Accuracy ", accuracy)
         snapshotNum += 1
         xValue.append(snapshotNum)
     accuracy = linkPrediction(embedding, np.array(trainData), trainLabels, np.array(testData), testLabels)
+    f.write("Final Accuracy " + str(accuracy))
+    f.write("\n")
     print("Final Accuracy ", accuracy)
     # scores, auc, n0, c0, res, ab_score = anomaly_detection_stream(embedding, train, test_piece, k, alfa, n0, c0)
     # print('Final auc of anomaly detection at snapshot %d: %f' % (snapshotNum, auc))
